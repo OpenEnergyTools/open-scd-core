@@ -123,7 +123,9 @@ declare global {
 }
 ```
 
-Its `title` property is a human-readable description of the edit, and `squash` is a boolean indicating whether the edit should be merged with the previous edit in the history.
+Its `title` property is a human-readable description of the edit for displaying in the editing history dialog.
+
+The `squash` flag indicates whether the edit should be merged with the previous edit in the history.
 
 #### `Edit` type
 
