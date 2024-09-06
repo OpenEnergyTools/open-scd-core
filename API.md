@@ -23,7 +23,7 @@ OpenSCD core communicates the data necessary for editing SCL documents by settin
 
 
 ```typescript
-export default class Plugin extends LitElement {
+export default class MyPlugin extends LitElement {
   docs: Record<string, XMLDocument> = {};
   doc?: XMLDocument;
   docName?: string;
@@ -53,7 +53,7 @@ type Plugin = {
   name: string;
   translations?: Record<string, string>;
   src: string;
-  icon: string;
+  icon: string; // Material icon name or image URL
   requireDoc?: boolean; // disable plugin if no doc is opened
 }
 ```
@@ -278,6 +278,30 @@ declare global {
 }
 ```
 
+### `ConfigurePluginEvent`
+
+The **configure plugin event** allows the plugin to request that OpenSCD core add, remove, or reconfigure a plugin.
+
+```typescript
+export type ConfigurePluginDetail = {
+  name: string;
+  kind: 'menu' | 'editor';
+  config: Plugin | null;
+};
+
+export type ConfigurePluginEvent = CustomEvent<ConfigurePluginDetail>;
+
+export function newConfigurePluginEvent(name: string, kind: 'menu' | 'editor', config: Plugin | null): ConfigurePluginEvent {
+  return new CustomEvent<ConfigurePluginDetail>('oscd-configure-plugin', {
+    bubbles: true,
+    composed: true,
+    detail: { name, kind, config },
+  });
+}
+```
+
+The combination of `name` and `kind` uniquely identifies the plugin to be configured. If `config` is `null`, the plugin is removed. Otherwise, the plugin is added or reconfigured.
+
 ## Theming
 
 OpenSCD core sets the following CSS variables on the plugin:
@@ -306,13 +330,9 @@ It is expected that the fonts `--oscd-theme-text-font` and `--oscd-theme-icon-fo
 
 ## Missing
 
-### Events for adding and removing plugins
-
-This is still needed if we want to enable plugins themselves to manage other plugins.
-
 ### Plugin manifest, searchable plugin store
 
-This is still needed if we want to enable plugins to be installed and updated from within OpenSCD. If the above is implemented, this could be done by a plugin itself. Otherwise, this could be done by the OpenSCD distribution.
+This is still needed if we want to enable plugins to be installed and updated from within OpenSCD. This could be done by a "plugin management" or "plugin store" plugin. Otherwise, this could be done by the OpenSCD distribution itself.
 
 A good candidate for a plugin manifest format is the Plugin type defined above, with the addition of a `kind` flag indicating whether it is a `"menu"` or `"editor"` plugin (or maybe `"both"`), and possibly a `version` property.
 
