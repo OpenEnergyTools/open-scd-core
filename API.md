@@ -314,6 +314,10 @@ This is still needed if we want to enable plugins to be installed and updated fr
 
 A good candidate for a plugin manifest format is the Plugin type defined above, with the addition of a `kind` flag indicating whether it is a `"menu"` or `"editor"` plugin (or maybe `"both"`), and possibly a `version` property.
 
+### Plugin bundle archive format
+
+For offline installation of plugins (e.g. by dragging and dropping a `.zip` file into OpenSCD), a format for bundling the plugin's JavaScript and resource files along with a manifest file is needed. This could either be implemented by the OpenSCD distribution or by a "plugin management" plugin as described in the previous section.
+
 ### Plugin update notifications
 
 Given a plugin manifest with a `version` number, OpenSCD core could check for updates to the plugins and notify the user when updates are available.
