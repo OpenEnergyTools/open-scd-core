@@ -327,27 +327,3 @@ OpenSCD core sets the following CSS variables on the plugin:
 ```
 
 It is expected that the fonts `--oscd-theme-text-font` and `--oscd-theme-icon-font` will be loaded in OpenSCD's `index.html` file. OpenSCD core does not load any fonts by itself.
-
-## Missing
-
-### Plugin manifest, searchable plugin store
-
-This is still needed if we want to enable plugins to be installed and updated from within OpenSCD. This could be done by a "plugin management" or "plugin store" plugin. Otherwise, this could be done by the OpenSCD distribution itself.
-
-A good candidate for a plugin manifest format is the Plugin type defined above, with the addition of a `kind` flag indicating whether it is a `"menu"` or `"editor"` plugin (or maybe `"both"`), and possibly a `version` property.
-
-### Plugin bundle archive format
-
-For offline installation of plugins (e.g. by dragging and dropping a `.zip` file into OpenSCD), a format for bundling the plugin's JavaScript and resource files along with a manifest file is needed. This could either be implemented by the OpenSCD distribution or by a "plugin management" plugin as described in the previous section.
-
-### Plugin update notifications
-
-Given a plugin manifest with a `version` number, OpenSCD core could check for updates to the plugins and notify the user when updates are available.
-
-Within the current architecture, the plugin's own service worker is expected to handle this.
-
-### Deep linking to editor plugins
-
-Currently, the only way to open an editor plugin is by clicking on its tab in the tab bar. It would be nice to be able to deep link to a particular editor plugin, for example by clicking on a link in another plugin.
-
-This could be handled by the OpenSCD distribution, which could e.g. listen for `hashchange` events and open the appropriate editor plugin by setting the OpenSCD core's `editorIndex` property.
