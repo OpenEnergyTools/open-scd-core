@@ -22,7 +22,7 @@ The **OpenSCD core API** is:
 OpenSCD core communicates the data necessary for editing SCL documents by setting the following [properties](https://developer.mozilla.org/en-US/docs/Glossary/Property/JavaScript) on the plugin's [DOM Element](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement):
 
 
-```typescript=
+```typescript
 export default class Plugin extends LitElement {
   docs: Record<string, XMLDocument> = {};
   doc?: XMLDocument;
@@ -94,7 +94,7 @@ Plugins communicate user intent to OpenSCD core by dispatching the following [cu
 
 The **edit event** allows a plugin to describe the changes it wants to make to the current `doc`.
 
-```typescript=
+```typescript
 export type EditDetailV2<E extends Edit = Edit> = {
   edit: E;
   title?: string;
@@ -129,14 +129,14 @@ It's `title` property is a human-readable description of the edit, and `squash` 
 
 The `EditDetailV2` defined above contains an `edit` of this type:
 
-```typescript=
+```typescript
 export type Edit = Insert | SetAttributes | Remove | Edit[];
 ```
 
 This means that a single edit can either consist in a sequence of other edits or in one of the following atomic edit types:
 
 > Intent to set or remove (if null) attributes on element.
-```typescript=
+```typescript
 export type SetAttributes = {
   element: Element;
   attributes: Partial<Record<string, string | null>>;
@@ -145,7 +145,7 @@ export type SetAttributes = {
 ```
 
 > Intent to `parent.insertBefore(node, reference)`
-```typescript=
+```typescript
 export type Insert = {
   parent: Node;
   node: Node;
@@ -154,7 +154,7 @@ export type Insert = {
 ```
 
 > Intent to remove a `node` from its `ownerDocument`.
-```typescript=
+```typescript
 export type Remove = {
   node: Node;
 };
@@ -165,7 +165,7 @@ export type Remove = {
 
 The **open event** allows a plugin to add a document `doc` to the `docs` collection under the name `docName`.
 
-```typescript=
+```typescript
 export type OpenDetail = {
   doc: XMLDocument;
   docName: string;
@@ -192,7 +192,7 @@ declare global {
 
 The **wizard event** allows the plugin to request opening a modal dialog enabling the user to edit an arbitrary SCL `element`, regardless of how the dialog for editing this particular type of element looks and works.
 
-```typescript=
+```typescript
 /* eslint-disable no-undef */
 interface WizardRequestBase {
   subWizard?: boolean;
