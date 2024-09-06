@@ -123,24 +123,32 @@ declare global {
 }
 ```
 
-It's `title` property is a human-readable description of the edit, and `squash` is a boolean indicating whether the edit should be merged with the previous edit in the history.
+Its `title` property is a human-readable description of the edit, and `squash` is a boolean indicating whether the edit should be merged with the previous edit in the history.
 
 #### `Edit` type
 
 The `EditDetailV2` defined above contains an `edit` of this type:
 
 ```typescript
-export type Edit = Insert | SetAttributes | Remove | Edit[];
+export type Edit = Insert | SetAttributes | SetTextContent | Remove | Edit[];
 ```
 
 This means that a single edit can either consist in a sequence of other edits or in one of the following atomic edit types:
 
-> Intent to set or remove (if null) attributes on element.
+> Intent to set or remove (if null) attributes on `element`.
 ```typescript
 export type SetAttributes = {
   element: Element;
   attributes: Partial<Record<string, string | null>>;
   attributesNS: Partial<Record<string, Partial<Record<string, string | null>>>>;
+};
+```
+
+> Intent to set the `textContent` of `element`.
+```typescript
+export type SetTextContent = {
+  element: Element;
+  textContent: string | null;
 };
 ```
 
