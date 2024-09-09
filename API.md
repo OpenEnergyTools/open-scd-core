@@ -10,7 +10,7 @@ An **OpenSCD plugin** is a [JavaScript module](https://developer.mozilla.org/en-
 
 An **OpenSCD menu plugin** is an OpenSCD plugin with an additional `run()` instance method which is called when the plugin's entry is clicked in OpenSCD's menu. It is continuously rendered into the app and is expected to normally not display any content of its own. It is meant for one-shot editing tasks or tasks that always run in the background (like validation).
 
-An **OpenSCD editor plugin** is a modal OpenSCD plugin that is only rendered as long as the user has its tab selected in OpenSCD's tab bar. It is meant for rendering the main part of OpenSCD's user interface.
+An **OpenSCD editor plugin** is a OpenSCD plugin that is only rendered as long as the user has its tab selected in OpenSCD's tab bar. It is meant for rendering the main part of OpenSCD's user interface.
 
 The **OpenSCD core API** is:
 - the way in which OpenSCD core communicates relevant data to the plugins and
