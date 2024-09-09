@@ -132,7 +132,7 @@ The `squash` flag indicates whether the edit should be merged with the previous 
 The `EditDetailV2` defined above contains an `edit` of this type:
 
 ```typescript
-export type Edit = Insert | SetAttributes | SetTextContent | Remove | Edit[];
+export type EditV2 = Insert | SetAttributes | SetTextContent | Remove | Edit[];
 ```
 
 This means that a single edit can either consist in a sequence of other edits or in one of the following atomic edit types:
@@ -143,6 +143,7 @@ export type SetAttributes = {
   element: Element;
   attributes: Partial<Record<string, string | null>>;
   attributesNS: Partial<Record<string, Partial<Record<string, string | null>>>>;
+  id?: string; // correlation id
 };
 ```
 
@@ -151,6 +152,7 @@ export type SetAttributes = {
 export type SetTextContent = {
   element: Element;
   textContent: string | null;
+  id?: string; // correlation id
 };
 ```
 
@@ -160,6 +162,7 @@ export type Insert = {
   parent: Node;
   node: Node;
   reference: Node | null;
+  id?: string; // correlation id
 };
 ```
 
@@ -167,8 +170,11 @@ export type Insert = {
 ```typescript
 export type Remove = {
   node: Node;
+  id?: string; // correlation id
 };
 ```
+
+The optional `id` property is used to correlate the edit with the corresponding undo/redo operation, e.g. in order to check if the edit was successful.
 
 
 ### `OpenEvent`
