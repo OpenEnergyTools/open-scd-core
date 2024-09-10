@@ -143,7 +143,6 @@ export type SetAttributes = {
   element: Element;
   attributes: Partial<Record<string, string | null>>;
   attributesNS: Partial<Record<string, Partial<Record<string, string | null>>>>;
-  id?: string; // correlation id
 };
 ```
 
@@ -152,7 +151,6 @@ export type SetAttributes = {
 export type SetTextContent = {
   element: Element;
   textContent: string | null;
-  id?: string; // correlation id
 };
 ```
 
@@ -162,7 +160,6 @@ export type Insert = {
   parent: Node;
   node: Node;
   reference: Node | null;
-  id?: string; // correlation id
 };
 ```
 
@@ -170,12 +167,8 @@ export type Insert = {
 ```typescript
 export type Remove = {
   node: Node;
-  id?: string; // correlation id
 };
 ```
-
-The optional `id` property is used to correlate the edit with the corresponding undo/redo operation, e.g. in order to check if the edit was successful.
-
 
 ### `OpenEvent`
 
