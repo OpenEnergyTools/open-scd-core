@@ -12,10 +12,10 @@ An **OpenSCD menu plugin** is an OpenSCD plugin with an additional `run()` insta
 
 An **OpenSCD editor plugin** is a OpenSCD plugin that is only rendered as long as the user has its tab selected in OpenSCD's tab bar. It is meant for rendering the main part of OpenSCD's user interface.
 
-The **OpenSCD core API** is:
-- the way in which OpenSCD core communicates relevant data to the plugins and
-- the way in which plugins communicate user intent to OpenSCD core.
-- the way in which OpenSCD sets CSS fonts and colors for plugins
+The **OpenSCD core API** describes the ways in which:
+- OpenSCD core communicates relevant data to the plugins,
+- plugins communicate user intent to OpenSCD core, and
+- OpenSCD sets CSS fonts and colors for plugins.
 
 ## Communicating data to plugins
 
@@ -23,7 +23,7 @@ OpenSCD core communicates the data necessary for editing SCL documents by settin
 
 
 ```typescript
-export default class MyPlugin extends LitElement {
+export default class MyPlugin extends HTMLElement {
   docs: Record<string, XMLDocument> = {};
   doc?: XMLDocument;
   docName?: string;
