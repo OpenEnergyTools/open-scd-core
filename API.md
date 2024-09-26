@@ -150,7 +150,7 @@ export type SetAttributes = {
 ```typescript
 export type SetTextContent = {
   element: Element;
-  textContent: string | null;
+  textContent: string;
 };
 ```
 
