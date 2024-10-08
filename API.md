@@ -74,9 +74,9 @@ Filename extensions of user-editable documents.
 ### `history`
 History of edits done to `doc`.
 
-### `editCount`
+### `docChangeCounter`
 
-Index of the current log entry in the `history`. Is incremented with every new edit and updated on undo/redo. 
+Keeps count of changes to the `doc`, including undo and redo, and indicates a changed `doc`. 
 
 ### `plugins`
 
