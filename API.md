@@ -76,7 +76,7 @@ History of edits done to `doc`.
 
 ### `docChangeCounter`
 
-Keeps count of changes to the `doc`, including undo and redo, and indicates a changed `doc`. 
+Keeps track of changes to the `doc`, including undo and redo, and indicates a changed `doc`. 
 
 ### `plugins`
 
