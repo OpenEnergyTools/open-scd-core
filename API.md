@@ -74,7 +74,7 @@ Filename extensions of user-editable documents.
 ### `history`
 History of edits done to `doc`.
 
-### `docChangeCounter`
+### `docVersion`
 
 Keeps track of changes to the `doc`, including undo and redo, and indicates a changed `doc`. 
 
