@@ -76,7 +76,7 @@ History of edits done to `doc`.
 
 ### `docVersion`
 
-Keeps track of changes to the `doc`, including undo and redo, and indicates a changed `doc`. 
+A change in the property indicates a change to the `doc` as a result of edits (including undo and redo). 
 
 ### `plugins`
 
