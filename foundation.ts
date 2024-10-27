@@ -7,22 +7,34 @@ export { newOpenEvent } from './foundation/open-event.js';
 export type { OpenEvent, OpenDetail } from './foundation/open-event.js';
 
 export {
-  handleEdit,
-  isComplex,
-  isInsert,
   isNamespaced,
-  isRemove,
   isUpdate,
-  newEditEvent,
-} from './foundation/edit-event.js';
+  newEditEventV1,
+} from './foundation/edit-event-v1.js';
 export type {
-  AttributeValue,
   Edit,
   EditEvent,
-  Insert,
-  NamespacedAttributeValue,
-  Remove,
   Update,
-} from './foundation/edit-event.js';
+  AttributeValue,
+  NamespacedAttributeValue,
+} from './foundation/edit-event-v1.js';
+
+export type {
+  EditEventV2,
+  EditEventOptions,
+  EditDetailV2,
+} from './foundation/edit-event-v2.js';
+
+export { isRemove, isInsert } from '@openenergytools/xml-lib';
+
+export type {
+  Insert,
+  Remove,
+  SetAttributes,
+  SetTextContent,
+  EditV2,
+} from '@openenergytools/xml-lib';
+
+export { newEditEvent } from './foundation/edit-event.js';
 
 export { cyrb64 } from './foundation/cyrb64.js';

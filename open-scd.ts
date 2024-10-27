@@ -16,21 +16,23 @@ import type { ActionDetail } from '@material/mwc-list';
 import type { Dialog } from '@material/mwc-dialog';
 import type { Drawer } from '@material/mwc-drawer';
 
-import { allLocales, sourceLocale, targetLocales } from './locales.js';
-
 import {
-  cyrb64,
-  Edit,
-  EditEvent,
+  convertEdit,
+  EditV2,
   handleEdit,
   isComplex,
   isInsert,
   isRemove,
-  isUpdate,
-  OpenEvent,
-} from './foundation.js';
+  isSetAttributes,
+} from '@openenergytools/xml-lib';
 
-export type LogEntry = { undo: Edit; redo: Edit };
+import { allLocales, sourceLocale, targetLocales } from './locales.js';
+
+import { cyrb64, EditEvent, OpenEvent } from './foundation.js';
+
+import { EditEventV2 } from './foundation/edit-event-v2.js';
+
+export type LogEntry = { undo: EditV2; redo: EditV2; title?: string };
 
 export type Plugin = {
   name: string;
@@ -68,7 +70,9 @@ const { getLocale, setLocale } = configureLocalization({
     import(new URL(`locales/${locale}.js`, import.meta.url).href),
 });
 
-function describe({ undo, redo }: LogEntry) {
+function describe({ undo, redo, title }: LogEntry) {
+  if (title) return title;
+
   let result = msg('Something unexpected happened!');
   if (isComplex(redo)) result = msg(str`≥ ${redo.length} nodes changed`);
   if (isInsert(redo))
@@ -79,7 +83,7 @@ function describe({ undo, redo }: LogEntry) {
         str`${redo.node.nodeName} inserted into ${redo.parent.nodeName}`
       );
   if (isRemove(redo)) result = msg(str`${redo.node.nodeName} removed`);
-  if (isUpdate(redo)) result = msg(str`${redo.element.tagName} updated`);
+  if (isSetAttributes(redo)) result = msg(str`${redo.element.tagName} updated`);
   return result;
 }
 
@@ -116,6 +120,9 @@ export class OpenSCD extends LitElement {
 
   @state()
   history: LogEntry[] = [];
+
+  @state()
+  docVersion = 0;
 
   @state()
   editCount: number = 0;
@@ -177,11 +184,71 @@ export class OpenSCD extends LitElement {
     this.docs[this.docName] = doc;
   }
 
+  updateVersion(): void {
+    this.docVersion += 1;
+  }
+
   handleEditEvent(event: EditEvent) {
     const edit = event.detail;
+    const editV2 = convertEdit(edit);
+
     this.history.splice(this.editCount);
-    this.history.push({ undo: handleEdit(edit), redo: edit });
+    this.history.push({ undo: handleEdit(editV2), redo: editV2 });
+
     this.editCount += 1;
+    this.updateVersion();
+  }
+
+  squashUndo(undoEdits: EditV2): EditV2 {
+    const lastHistory = this.history[this.history.length - 1];
+    if (!lastHistory) return undoEdits;
+
+    const lastUndo = lastHistory.undo;
+    if (lastUndo instanceof Array && undoEdits instanceof Array)
+      return [...undoEdits, ...lastUndo];
+
+    if (lastUndo instanceof Array && !(undoEdits instanceof Array))
+      return [undoEdits, ...lastUndo];
+
+    if (!(lastUndo instanceof Array) && undoEdits instanceof Array)
+      return [...undoEdits, lastUndo];
+
+    return [undoEdits, lastUndo];
+  }
+
+  squashRedo(edits: EditV2): EditV2 {
+    const lastHistory = this.history[this.history.length - 1];
+    if (!lastHistory) return edits;
+
+    const lastRedo = lastHistory.redo;
+    if (lastRedo instanceof Array && edits instanceof Array)
+      return [...lastRedo, ...edits];
+
+    if (lastRedo instanceof Array && !(edits instanceof Array))
+      return [...lastRedo, edits];
+
+    if (!(lastRedo instanceof Array) && edits instanceof Array)
+      return [lastRedo, ...edits];
+
+    return [lastRedo, edits];
+  }
+
+  handleEditEventV2(event: EditEventV2) {
+    const { edit, title } = event.detail;
+    const squash = !!event.detail.squash;
+
+    this.history.splice(this.editCount); // cut history at editCount
+
+    const undo = squash ? this.squashUndo(handleEdit(edit)) : handleEdit(edit);
+    const redo = squash ? this.squashRedo(edit) : edit;
+
+    const logTitle = title || this.history[this.history.length - 1]?.title;
+
+    if (squash) this.history.pop(); // combine with last edit in history
+
+    this.history.push({ undo, redo, title: logTitle });
+    this.editCount = this.history.length;
+    this.updateVersion();
   }
 
   /** Undo the last `n` [[Edit]]s committed */
@@ -189,6 +256,7 @@ export class OpenSCD extends LitElement {
     if (!this.canUndo || n < 1) return;
     handleEdit(this.history[this.last!].undo);
     this.editCount -= 1;
+    this.updateVersion();
     if (n > 1) this.undo(n - 1);
   }
 
@@ -197,6 +265,7 @@ export class OpenSCD extends LitElement {
     if (!this.canRedo || n < 1) return;
     handleEdit(this.history[this.editCount].redo);
     this.editCount += 1;
+    this.updateVersion();
     if (n > 1) this.redo(n - 1);
   }
 
@@ -327,6 +396,9 @@ export class OpenSCD extends LitElement {
 
     this.addEventListener('oscd-open', event => this.handleOpenDoc(event));
     this.addEventListener('oscd-edit', event => this.handleEditEvent(event));
+    this.addEventListener('oscd-edit-v2', event =>
+      this.handleEditEventV2(event)
+    );
   }
 
   private renderLogEntry(entry: LogEntry) {

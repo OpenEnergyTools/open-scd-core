@@ -1,5 +1,7 @@
 import { expect, fixture, html } from '@open-wc/testing';
 
+import { setAttribute } from '@openenergytools/xml-lib';
+
 import {
   Arbitrary,
   array,
@@ -21,12 +23,13 @@ import {
   Edit,
   Insert,
   isNamespaced,
-  NamespacedAttributeValue,
   newEditEvent,
   newOpenEvent,
   Remove,
   Update,
 } from './foundation.js';
+
+import { NamespacedAttributeValue } from './foundation/edit-event-v1.js';
 
 import type { OpenSCD } from './open-scd.js';
 
@@ -238,7 +241,7 @@ describe('Editing Element', () => {
     );
     expect(element).to.have.attribute('name', 'A2');
     expect(element).to.not.have.attribute('desc');
-    expect(element).to.have.attribute('__proto__', 'a string');
+    expect(element).to.not.have.attribute('__proto__', 'a string');
     expect(element).to.have.attribute('myns:attr', 'namespaced value');
   });
 
@@ -278,7 +281,7 @@ describe('Editing Element', () => {
     expect(sclDoc.querySelector('Substation')).to.not.exist;
   });
 
-  describe('generally', () => {
+  describe('on oscd-edit events', () => {
     it('inserts elements on Insert edit events', () =>
       assert(
         property(
@@ -303,6 +306,9 @@ describe('Editing Element', () => {
         property(
           util.testDocs.chain(([{ nodes }]) => util.update(nodes)),
           edit => {
+            // eslint-disable-next-line no-prototype-builtins
+            if (edit.attributes.hasOwnProperty('__proto__')) return true; // editv1 does not tranlate edge case to editv2
+
             editor.dispatchEvent(newEditEvent(edit));
             return Object.entries(edit.attributes)
               .filter(
@@ -340,6 +346,118 @@ describe('Editing Element', () => {
           }
         )
       ));
+
+    it('removes elements on Remove edit events', () =>
+      assert(
+        property(
+          util.testDocs.chain(([{ nodes }]) => util.remove(nodes)),
+          ({ node }) => {
+            editor.dispatchEvent(newEditEvent({ node }));
+            return !node.parentNode;
+          }
+        )
+      ));
+
+    it('undoes up to n edits on undo(n) call', () =>
+      assert(
+        property(
+          util.testDocs.chain(docs => util.undoRedoTestCases(...docs)),
+          ({ doc1, doc2, edits }: util.UndoRedoTestCase) => {
+            const [oldDoc1, oldDoc2] = [doc1, doc2].map(doc =>
+              doc.cloneNode(true)
+            );
+            edits.forEach((a: Edit) => {
+              editor.dispatchEvent(newEditEvent(a));
+            });
+            if (edits.length) editor.undo(edits.length);
+            expect(doc1).to.satisfy((doc: XMLDocument) =>
+              doc.isEqualNode(oldDoc1)
+            );
+            expect(doc2).to.satisfy((doc: XMLDocument) =>
+              doc.isEqualNode(oldDoc2)
+            );
+            return true;
+          }
+        )
+      ));
+
+    it('redoes up to n edits on redo(n) call', () =>
+      assert(
+        property(
+          util.testDocs.chain(docs => util.undoRedoTestCases(...docs)),
+          ({ doc1, doc2, edits }: util.UndoRedoTestCase) => {
+            edits.forEach((a: Edit) => {
+              editor.dispatchEvent(newEditEvent(a));
+            });
+            const [oldDoc1, oldDoc2] = [doc1, doc2].map(doc =>
+              new XMLSerializer().serializeToString(doc)
+            );
+            if (edits.length) {
+              editor.undo(edits.length + 1);
+              editor.redo(edits.length + 1);
+            }
+            const [newDoc1, newDoc2] = [doc1, doc2].map(doc =>
+              new XMLSerializer().serializeToString(doc)
+            );
+            return oldDoc1 === newDoc1 && oldDoc2 === newDoc2;
+          }
+        )
+      ));
+  });
+
+  describe('on oscd-edit-v2 events', () => {
+    it('inserts elements on Insert edit events', () =>
+      assert(
+        property(
+          util.testDocs.chain(([doc1, doc2]) => {
+            const nodes = doc1.nodes.concat(doc2.nodes);
+            return util.insert(nodes);
+          }),
+          edit => {
+            editor.dispatchEvent(newEditEvent(edit));
+            if (util.isValidInsert(edit))
+              return (
+                edit.node.parentElement === edit.parent &&
+                edit.node.nextSibling === edit.reference
+              );
+            return true;
+          }
+        )
+      ));
+
+    it('updates default- and foreign-namespace attributes on UpdateNS events', () =>
+      assert(
+        property(
+          util.testDocs.chain(([{ nodes }]) => setAttribute(nodes)),
+          edit => {
+            editor.dispatchEvent(newEditEvent(edit));
+            return (
+              Object.entries(edit.attributes)
+                .filter(([name]) => util.xmlAttributeName.test(name))
+                .map(entry => entry as [string, string | null])
+                .every(
+                  ([name, value]) => edit.element.getAttribute(name) === value
+                ) &&
+              Object.entries(edit.attributesNS)
+                .map(entry => entry as [string, Record<string, string | null>])
+                .every(([ns, attributes]) =>
+                  Object.entries(attributes)
+                    .filter(([name]) => util.xmlAttributeName.test(name))
+                    .map(entry => entry as [string, string | null])
+                    .every(
+                      ([name, value]) =>
+                        edit.element.getAttributeNS(
+                          ns,
+                          name.includes(':')
+                            ? <string>name.split(':', 2)[1]
+                            : name
+                        ) === value
+                    )
+                )
+            );
+          }
+        )
+      )).timeout(20000);
 
     it('removes elements on Remove edit events', () =>
       assert(

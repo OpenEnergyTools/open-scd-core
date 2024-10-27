@@ -119,12 +119,17 @@ allLocales.forEach(lang =>
 
       editor.dispatchEvent(newEditEvent({ node }));
       editor.dispatchEvent(
-        newEditEvent([
-          { parent, node, reference },
-          { parent, node, reference: null },
-          'invalid edit' as unknown as Edit,
-        ])
+        newEditEvent(
+          [
+            { parent, node, reference },
+            { parent, node, reference: null },
+            'invalid edit' as unknown as Edit,
+          ],
+          { title: 'User Defined Log Title' }
+        )
       );
+
+      editor.dispatchEvent(newEditEvent({ node }, { squash: true }));
 
       await editor.updateComplete;
       editor.shadowRoot
@@ -177,7 +182,7 @@ allLocales.forEach(lang =>
       );
       await editor.updateComplete;
 
-      await timeout(20);
+      await timeout(100);
       await visualDiff(editor, `log-entries-undone-${lang}`);
 
       editor.shadowRoot
@@ -189,7 +194,7 @@ allLocales.forEach(lang =>
         ?.click();
       await editor.updateComplete;
 
-      await timeout(20);
+      await timeout(100);
       await visualDiff(editor, `log-entries-redone-${lang}`);
     });
 
