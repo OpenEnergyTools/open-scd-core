@@ -16,6 +16,8 @@ import type { ActionDetail } from '@material/mwc-list';
 import type { Dialog } from '@material/mwc-dialog';
 import type { Drawer } from '@material/mwc-drawer';
 
+import './components/code-wizard.js';
+import './components/oscd-card.js';
 import {
   convertEdit,
   EditV2,
@@ -25,11 +27,18 @@ import {
   isRemove,
   isSetAttributes,
 } from '@openenergytools/xml-lib';
+import type { CodeWizard } from './components/code-wizard.js';
 
 import { allLocales, sourceLocale, targetLocales } from './locales.js';
 
 import { cyrb64, EditEvent, OpenEvent } from './foundation.js';
 
+import {
+  CloseWizardEvent,
+  CreateWizardEvent,
+  EditWizardEvent,
+  WizardRequest,
+} from './foundation/wizard-event.js';
 import { EditEventV2 } from './foundation/edit-event-v2.js';
 
 export type LogEntry = { undo: EditV2; redo: EditV2; title?: string };
@@ -374,6 +383,28 @@ export class OpenSCD extends LitElement {
       .filter(p => p !== undefined);
   }
 
+  /** FIFO queue of [[`Wizard`]]s to display. */
+  @state()
+  workflow: WizardRequest[] = [];
+
+  @query('.wizard.code') codeWizard?: CodeWizard;
+
+  private closeWizard(we: CloseWizardEvent): void {
+    const wizard = we.detail;
+
+    this.workflow.splice(this.workflow.indexOf(wizard), 1);
+    this.requestUpdate();
+  }
+
+  private onWizard(we: EditWizardEvent | CreateWizardEvent) {
+    const wizard = we.detail;
+
+    if (wizard.subWizard) this.workflow.unshift(wizard);
+    else this.workflow.push(wizard);
+
+    this.requestUpdate();
+  }
+
   private hotkeys: Partial<Record<string, () => void>> = {
     m: this.controls.menu.action,
     z: this.controls.undo.action,
@@ -399,6 +430,27 @@ export class OpenSCD extends LitElement {
     this.addEventListener('oscd-edit-v2', event =>
       this.handleEditEventV2(event)
     );
+
+    this.addEventListener('oscd-edit-wizard-request', event =>
+      this.onWizard(event as EditWizardEvent)
+    );
+    this.addEventListener('oscd-create-wizard-request', event =>
+      this.onWizard(event as CreateWizardEvent)
+    );
+    this.addEventListener('oscd-close-wizard', event =>
+      this.closeWizard(event as CloseWizardEvent)
+    );
+  }
+
+  private renderWizard(): TemplateResult {
+    if (!this.workflow.length) return html``;
+
+    return html`${this.workflow.map(
+      (wizard, i, arr) =>
+        html`<oscd-card .stackLevel="${arr.length - i - 1}"
+          ><code-wizard class="wizard code" .wizard=${wizard}></code-wizard
+        ></oscd-card>`
+    )}`;
   }
 
   private renderLogEntry(entry: LogEntry) {
@@ -499,6 +551,7 @@ export class OpenSCD extends LitElement {
           >${msg('Close')}</mwc-button
         >
       </mwc-dialog>
+      ${this.renderWizard()}
       <aside>
         ${this.plugins.menu.map(
           plugin =>
@@ -534,6 +587,11 @@ export class OpenSCD extends LitElement {
     mwc-top-app-bar-fixed {
       --mdc-theme-text-disabled-on-light: rgba(255, 255, 255, 0.38);
     } /* hack to fix disabled icon buttons rendering black */
+
+    mwc-dialog {
+      display: flex;
+      flex-direction: column;
+    }
   `;
 }
 
