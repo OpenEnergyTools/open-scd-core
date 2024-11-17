@@ -420,6 +420,13 @@ export class OpenSCD extends LitElement {
     e.preventDefault();
   }
 
+  firstUpdated() {
+    const background = getComputedStyle(this.menuUI).getPropertyValue(
+      '--oscd-base2'
+    );
+    document.body.style.background = background;
+  }
+
   constructor() {
     super();
 
@@ -591,6 +598,53 @@ export class OpenSCD extends LitElement {
     mwc-dialog {
       display: flex;
       flex-direction: column;
+    }
+
+    * {
+      --oscd-accent-yellow: var(--oscd-theme-accent-yellow, #b58900);
+      --oscd-accent-orange: var(--oscd-theme-accent-orange, #cb4b16);
+      --oscd-accent-red: var(--oscd-theme-accent-red, #dc322f);
+      --oscd-accent-magenta: var(--oscd-theme-accent-magenta, #d33682);
+      --oscd-accent-violet: var(--oscd-theme-accent-violet, #6c71c4);
+      --oscd-accent-blue: var(--oscd-theme-accent-blue, #268bd2);
+      --oscd-accent-cyan: var(--oscd-theme-accent-cyan, #2aa198);
+      --oscd-accent-green: var(--oscd-theme-accent-green, #859900);
+
+      --oscd-base03: var(--oscd-theme-base03, #002b36);
+      --oscd-base02: var(--oscd-theme-base02, #073642);
+      --oscd-base01: var(--oscd-theme-base01, #586e75);
+      --oscd-base00: var(--oscd-theme-base00, #657b83);
+      --oscd-base0: var(--oscd-theme-base0, #839496);
+      --oscd-base1: var(--oscd-theme-base1, #93a1a1);
+      --oscd-base2: var(--oscd-theme-base2, #eee8d5);
+      --oscd-base3: var(--oscd-theme-base3, #fdf6e3);
+    }
+
+    * {
+      --oscd-primary: var(--oscd-theme-primary, var(--oscd-accent-cyan));
+      --oscd-secondary: var(--oscd-theme-secondary, var(--oscd-accent-violet));
+      --oscd-error: var(--oscd-theme-error, var(--oscd-accent-red));
+
+      --oscd-text-font: var(--oscd-theme-text-font, 'Roboto');
+      --oscd-icon-font: var(--oscd-theme-icon-font, 'Material Icons');
+
+      --mdc-theme-primary: var(--oscd-primary);
+      --mdc-theme-secondary: var(--oscd-secondary);
+      --mdc-theme-background: var(--oscd-base3);
+      --mdc-theme-surface: var(--oscd-base3);
+      --mdc-theme-on-primary: var(--oscd-base2);
+      --mdc-theme-on-secondary: var(--oscd-base2);
+      --mdc-theme-on-background: var(--oscd-base00);
+      --mdc-theme-on-surface: var(--oscd-base00);
+      --mdc-theme-text-primary-on-background: var(--oscd-base01);
+      --mdc-theme-text-secondary-on-background: var(--oscd-base00);
+      --mdc-theme-text-icon-on-background: var(--oscd-base00);
+      --mdc-theme-error: var(--oscd-error);
+      --mdc-button-disabled-ink-color: var(--oscd-base1);
+      --mdc-drawer-heading-ink-color: var(--oscd-base00);
+      --mdc-dialog-heading-ink-color: var(--oscd-base00);
+      --mdc-typography-font-family: var(--oscd-text-font);
+      --mdc-icon-font: var(--oscd-icon-font);
     }
   `;
 }

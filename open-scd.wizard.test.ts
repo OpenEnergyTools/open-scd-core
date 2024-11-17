@@ -16,17 +16,25 @@ function timeout(ms: number) {
 
 mocha.timeout(2000 * factor);
 
-const doc = new DOMParser().parseFromString(
-  `<Parent>
+const oldValue = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Parent xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sxy="http://www.iec.ch/61850/2003/SCLcoordinates">
     <Element>
       <ChildElement childAttr="someAttr"></ChildElement>
       <ChildElement2 childAttr="someAttr"></ChildElement2>
       <ChildElement3 childAttr="someAttr"></ChildElement3>
-      <ChildElement4 childAttr="someAttr"></ChildElement4>
+      <sxy:ChildElement4 childAttr="someAttr"></sxy:ChildElement4>
+      <text><![CDATA[Hello World!]]></text>
+      <!--
+        Hello,
+          I am a multi-line XML comment
+          <staticText>
+              <reportElement x="180" y="0" width="200" height="20"/>
+              <text><![CDATA[Hello World!]]></text>
+            </staticText>
+        -->
     </Element>
-  </Parent>`,
-  'application/xml'
-);
+  </Parent>`;
+
+const doc = new DOMParser().parseFromString(oldValue, 'application/xml');
 
 let editor: OpenSCD;
 beforeEach(() => {
@@ -42,9 +50,9 @@ describe(`code wizard`, () => {
   it(`renders code wizard on CreateWizard request`, async () => {
     await editor.updateComplete;
 
-    const parent = doc.querySelector('Parent')!;
-
-    editor.dispatchEvent(newCreateWizardEvent(parent, 'Element'));
+    editor.dispatchEvent(
+      newCreateWizardEvent(doc as unknown as Element, 'Element')
+    );
 
     await timeout(100);
     await visualDiff(editor, `wizard-create`);

@@ -96,8 +96,9 @@ export class CodeWizard extends LitElement {
   }
 
   updated(): void {
-    this.editor.basePath = '';
+    this.editor.basePath = '/components/ace';
     this.editor.mode = 'ace/mode/xml';
+    this.editor.theme = 'ace/theme/oscd_custom';
     this.dialog.show();
   }
 
