@@ -41,16 +41,10 @@ import {
 } from './foundation/wizard-event.js';
 import { EditEventV2 } from './foundation/edit-event-v2.js';
 
+import { ConfigurePluginEvent, Plugin } from './foundation/plugin-event.js';
+
 export type LogEntry = { undo: EditV2; redo: EditV2; title?: string };
 
-export type Plugin = {
-  name: string;
-  translations?: Record<typeof targetLocales[number], string>;
-  src: string;
-  icon: string;
-  requireDoc?: boolean;
-  active?: boolean;
-};
 export type PluginSet = { menu: Plugin[]; editor: Plugin[] };
 
 const pluginTags = new Map<string, string>();
@@ -174,18 +168,40 @@ export class OpenSCD extends LitElement {
 
   set plugins(plugins: Partial<PluginSet>) {
     Object.values(plugins).forEach(kind =>
-      kind.forEach(plugin => {
-        const tagName = pluginTag(plugin.src);
-        if (this.loadedPlugins.has(tagName)) return;
-        this.#loadedPlugins.set(tagName, plugin);
-        if (customElements.get(tagName)) return;
-        const url = new URL(plugin.src, window.location.href).toString();
-        import(url).then(mod => customElements.define(tagName, mod.default));
-      })
+      kind.forEach(plugin => this.loadPlugin(plugin))
     );
 
     this.#plugins = { menu: [], editor: [], ...plugins };
     this.requestUpdate();
+  }
+
+  loadPlugin(plugin: Plugin): void {
+    const tagName = pluginTag(plugin.src);
+    if (this.loadedPlugins.has(tagName)) return;
+    this.#loadedPlugins.set(tagName, plugin);
+    if (customElements.get(tagName)) return;
+    const url = new URL(plugin.src, window.location.href).toString();
+    import(url).then(mod => customElements.define(tagName, mod.default));
+  }
+
+  unloadPlugin(name: string, kind: 'menu' | 'editor'): void {
+    const plugin = this.#plugins[kind].find(plug => plug.name === name);
+    if (!plugin) return;
+
+    const index = this.#plugins[kind].indexOf(plugin);
+    this.#plugins[kind].splice(index, 1);
+    const tagName = pluginTag(plugin.src);
+    this.loadedPlugins.delete(tagName);
+  }
+
+  private onConfigurePlugin(evt: ConfigurePluginEvent): void {
+    const { name, kind, config } = evt.detail;
+
+    if (config === null) this.unloadPlugin(name, kind);
+    else {
+      this.loadPlugin(config);
+      this.#plugins[kind].push(config);
+    }
   }
 
   handleOpenDoc({ detail: { docName, doc } }: OpenEvent) {
@@ -446,6 +462,10 @@ export class OpenSCD extends LitElement {
     );
     this.addEventListener('oscd-close-wizard', event =>
       this.closeWizard(event as CloseWizardEvent)
+    );
+
+    this.addEventListener('oscd-configure-plugin', event =>
+      this.onConfigurePlugin(event as ConfigurePluginEvent)
     );
   }
 
