@@ -307,10 +307,15 @@ OpenSCD core sets the following CSS variables on the plugin:
 
 ```css
 * {
-  --oscd-primary: var(--oscd-theme-primary, #2aa198);
-  --oscd-secondary: var(--oscd-theme-secondary, #6c71c4);
-  --oscd-error: var(--oscd-theme-error, #dc322f);
-
+  --oscd-accent-yellow: var(--oscd-theme-accent-yellow, #b58900);
+  --oscd-accent-orange: var(--oscd-theme-accent-orange, #cb4b16);
+  --oscd-accent-red: var(--oscd-theme-accent-red, #dc322f);
+  --oscd-accent-magenta: var(--oscd-theme-accent-magenta, #d33682);
+  --oscd-accent-violet: var(--oscd-theme-accent-violet, #6c71c4);
+  --oscd-accent-blue: var(--oscd-theme-accent-blue, #268bd2);
+  --oscd-accent-cyan: var(--oscd-theme-accent-cyan, #2aa198);
+  --oscd-accent-green: var(--oscd-theme-accent-green, #859900);
+      
   --oscd-base03: var(--oscd-theme-base03, #002b36);
   --oscd-base02: var(--oscd-theme-base02, #073642);
   --oscd-base01: var(--oscd-theme-base01, #586e75);
@@ -319,6 +324,10 @@ OpenSCD core sets the following CSS variables on the plugin:
   --oscd-base1: var(--oscd-theme-base1, #93a1a1);
   --oscd-base2: var(--oscd-theme-base2, #eee8d5);
   --oscd-base3: var(--oscd-theme-base3, #fdf6e3);
+
+  --oscd-primary: var(--oscd-theme-primary, var(--oscd-accent-cyan));
+  --oscd-secondary: var(--oscd-theme-secondary, var(--oscd-accent-violet));
+  --oscd-error: var(--oscd-theme-error, var(--oscd-accent-red));
 
   --oscd-text-font: var(--oscd-theme-text-font, 'Roboto');
   --oscd-icon-font: var(--oscd-theme-icon-font, 'Material Icons');
