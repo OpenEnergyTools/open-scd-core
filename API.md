@@ -99,6 +99,7 @@ export type EditDetailV2<E extends Edit = Edit> = {
   edit: E;
   title?: string;
   squash?: boolean;
+  createHistoryEntry?: boolean;
 }
 
 export type EditEventV2<E extends Edit = Edit> = CustomEvent<EditDetailV2<E>>;
@@ -106,6 +107,7 @@ export type EditEventV2<E extends Edit = Edit> = CustomEvent<EditDetailV2<E>>;
 export type EditEventOptions = {
   title?: string;
   squash?: boolean;
+  createHistoryEntry?: boolean;
 }
 
 export function newEditEventV2<E extends Edit>(edit: E, options: EditEventOptions): EditEventV2<E> {
@@ -126,6 +128,8 @@ declare global {
 Its `title` property is a human-readable description of the edit for displaying in the editing history dialog.
 
 The `squash` flag indicates whether the edit should be merged with the previous edit in the history.
+
+The `createHistoryEntry` flag decides if a history entry should be created. Defaults to `true`. 
 
 #### `Edit` type
 
