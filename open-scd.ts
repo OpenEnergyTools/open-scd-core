@@ -10,11 +10,19 @@ import '@material/mwc-drawer';
 import '@material/mwc-icon';
 import '@material/mwc-icon-button';
 import '@material/mwc-list';
+import '@material/mwc-menu';
+import '@material/mwc-select';
 import '@material/mwc-tab-bar';
+import '@material/mwc-textfield';
 import '@material/mwc-top-app-bar-fixed';
-import type { ActionDetail } from '@material/mwc-list';
+import type { ActionDetail, SingleSelectedEvent } from '@material/mwc-list';
 import type { Dialog } from '@material/mwc-dialog';
 import type { Drawer } from '@material/mwc-drawer';
+import type { IconButton } from '@material/mwc-icon-button';
+import type { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
+import type { Menu } from '@material/mwc-menu';
+import type { Select } from '@material/mwc-select';
+import type { TextField } from '@material/mwc-textfield';
 
 import './components/code-wizard.js';
 import './components/oscd-card.js';
@@ -152,6 +160,27 @@ export class OpenSCD extends LitElement {
   /** The name of the [[`doc`]] currently being edited */
   @property({ type: String, reflect: true }) docName = '';
 
+  /** The file endings of editable files */
+  @property({ type: Array, reflect: true }) editable = [
+    'cid',
+    'icd',
+    'iid',
+    'scd',
+    'sed',
+    'ssd',
+  ];
+
+  isEditable(docName: string): boolean {
+    return !!this.editable.find(ext =>
+      docName.toLowerCase().endsWith(`.${ext}`)
+    );
+  }
+
+  @state()
+  get editableDocs(): string[] {
+    return Object.keys(this.docs).filter(name => this.isEditable(name));
+  }
+
   #loadedPlugins = new Map<string, Plugin>();
 
   @state()
@@ -205,8 +234,8 @@ export class OpenSCD extends LitElement {
   }
 
   handleOpenDoc({ detail: { docName, doc } }: OpenEvent) {
-    this.docName = docName;
-    this.docs[this.docName] = doc;
+    this.docs[docName] = doc;
+    if (this.isEditable(docName)) this.docName = docName;
   }
 
   updateVersion(): void {
@@ -297,8 +326,23 @@ export class OpenSCD extends LitElement {
   @query('#log')
   logUI!: Dialog;
 
+  @query('#editFile')
+  editFileUI!: Dialog;
+
   @query('#menu')
   menuUI!: Drawer;
+
+  @query('#fileName')
+  fileNameUI!: TextField;
+
+  @query('#fileExtension')
+  fileExtensionUI!: Select;
+
+  @query('#fileMenu')
+  fileMenuUI!: Menu;
+
+  @query('#fileMenuButton')
+  fileMenuButtonUI?: IconButton;
 
   @property({ type: String, reflect: true })
   get locale() {
@@ -436,13 +480,6 @@ export class OpenSCD extends LitElement {
     e.preventDefault();
   }
 
-  firstUpdated() {
-    const background = getComputedStyle(this.menuUI).getPropertyValue(
-      '--oscd-base2'
-    );
-    document.body.style.background = background;
-  }
-
   constructor() {
     super();
 
@@ -522,7 +559,42 @@ export class OpenSCD extends LitElement {
         </mwc-list>
         <mwc-top-app-bar-fixed slot="appContent">
           ${renderActionItem(this.controls.menu, 'navigationIcon')}
-          <div slot="title" id="title">${this.docName}</div>
+          <div
+            slot="title"
+            id="title"
+            style="position: relative; --mdc-icon-button-size: 32px"
+          >
+            ${this.editableDocs.length > 1
+              ? html`<mwc-icon-button
+                  icon="arrow_drop_down"
+                  id="fileMenuButton"
+                  @click=${() => this.fileMenuUI.show()}
+                ></mwc-icon-button>`
+              : nothing}
+            ${this.docName}
+            ${this.docName
+              ? html`<mwc-icon-button
+                  icon="edit"
+                  @click=${() => this.editFileUI.show()}
+                ></mwc-icon-button>`
+              : nothing}
+            <mwc-menu
+              fixed
+              id="fileMenu"
+              corner="BOTTOM_END"
+              @selected=${({ detail: { index } }: SingleSelectedEvent) => {
+                const item = this.fileMenuUI.selected as ListItemBase | null;
+                if (!item) return;
+                this.docName = this.editableDocs[index];
+                item.selected = false;
+                this.fileMenuUI.layout();
+              }}
+            >
+              ${this.editableDocs.map(
+                name => html`<mwc-list-item>${name}</mwc-list-item>`
+              )}
+            </mwc-menu>
+          </div>
           ${this.#actions.map(op => renderActionItem(op))}
           <mwc-tab-bar
             activeIndex=${this.editors.filter(p => !p.isDisabled()).length
@@ -558,6 +630,78 @@ export class OpenSCD extends LitElement {
             : nothing}
         </mwc-top-app-bar-fixed>
       </mwc-drawer>
+      <mwc-dialog
+        id="editFile"
+        heading="${this.docName}"
+        @closed=${({ detail }: { detail: { action: string } | null }) => {
+          if (!detail) return;
+          if (detail.action === 'remove') {
+            delete this.docs[this.docName];
+            this.docName = this.editableDocs[0] || '';
+          }
+        }}
+      >
+        <mwc-textfield
+          id="fileName"
+          label="${msg('Filename')}"
+          value="${this.docName.replace(/\.[^.]+$/, '')}"
+          dialogInitialFocus
+          .validityTransform=${(value: string) => {
+            const name = `${value}.${this.fileExtensionUI.value}`;
+            if (name in this.docs && name !== this.docName)
+              return {
+                valid: false,
+              };
+            return {};
+          }}
+        ></mwc-textfield>
+        <mwc-select
+          label="${msg('Extension')}"
+          fixedMenuPosition
+          id="fileExtension"
+          @selected=${() => this.fileNameUI.reportValidity()}
+        >
+          ${this.editable.map(
+            ext =>
+              html`<mwc-list-item
+                ?selected=${this.docName.endsWith(`.${ext}`)}
+                value="${ext}"
+                >${ext}</mwc-list-item
+              >`
+          )}
+        </mwc-select>
+        <mwc-button
+          slot="secondaryAction"
+          icon="delete"
+          style="--mdc-theme-primary: var(--oscd-error)"
+          dialogAction="remove"
+        >
+          ${msg('Close file')}
+        </mwc-button>
+        <mwc-button slot="secondaryAction" dialogAction="close">
+          ${msg('Cancel')}
+        </mwc-button>
+        <mwc-button
+          slot="primaryAction"
+          icon="edit"
+          @click=${() => {
+            const valid = this.fileNameUI.checkValidity();
+            if (!valid) {
+              this.fileNameUI.reportValidity();
+              return;
+            }
+            const newDocName = `${this.fileNameUI.value}.${this.fileExtensionUI.value}`;
+            if (this.docs[newDocName]) return;
+            this.docs[newDocName] = this.doc;
+            delete this.docs[this.docName];
+            this.docName = newDocName;
+            this.editFileUI.close();
+          }}
+          trailingIcon
+        >
+          ${msg('Rename')}
+        </mwc-button>
+      </mwc-dialog>
       <mwc-dialog id="log" heading="${this.controls.log.getName()}">
         <mwc-list wrapFocus>${this.renderHistory()}</mwc-list>
         <mwc-button
@@ -595,7 +739,30 @@ export class OpenSCD extends LitElement {
       </aside>`;
   }
 
+  firstUpdated() {
+    const background = getComputedStyle(this.menuUI).getPropertyValue(
+      '--oscd-base2'
+    );
+    document.body.style.background = background;
+  }
+
+  updated() {
+    if (this.fileMenuButtonUI) this.fileMenuUI.anchor = this.fileMenuButtonUI;
+  }
+
   static styles = css`
+    .fileext {
+      opacity: 0.81;
+    }
+
+    .filename {
+      caret-color: var(--oscd-secondary);
+    }
+
+    .filename:focus {
+      outline: none;
+    }
+
     aside {
       position: absolute;
       top: 0;
@@ -668,6 +835,20 @@ export class OpenSCD extends LitElement {
       --mdc-button-disabled-ink-color: var(--oscd-base1);
       --mdc-drawer-heading-ink-color: var(--oscd-base00);
       --mdc-dialog-heading-ink-color: var(--oscd-base00);
+
+      --mdc-text-field-fill-color: var(--oscd-base2);
+      --mdc-text-field-ink-color: var(--oscd-base02);
+      --mdc-text-field-label-ink-color: var(--oscd-base01);
+      --mdc-text-field-idle-line-color: var(--oscd-base00);
+      --mdc-text-field-hover-line-color: var(--oscd-base02);
+
+      --mdc-select-fill-color: var(--oscd-base2);
+      --mdc-select-ink-color: var(--oscd-base02);
+      --mdc-select-label-ink-color: var(--oscd-base01);
+      --mdc-select-idle-line-color: var(--oscd-base00);
+      --mdc-select-hover-line-color: var(--oscd-base02);
+      --mdc-select-dropdown-icon-color: var(--oscd-base01);
+
       --mdc-typography-font-family: var(--oscd-text-font);
       --mdc-icon-font: var(--oscd-icon-font);
     }

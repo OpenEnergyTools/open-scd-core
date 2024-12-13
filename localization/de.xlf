@@ -46,6 +46,26 @@
   <source>Your editing history will be displayed here.</source>
   <target>Hier wird Ihre Bearbeitungshistorie angezeigt.</target>
 </trans-unit>
+<trans-unit id="s690714fde574c188">
+  <source>Filename</source>
+  <target>Dateiname</target>
+</trans-unit>
+<trans-unit id="s1b528387ae29637a">
+  <source>Extension</source>
+  <target>Dateiendung</target>
+</trans-unit>
+<trans-unit id="s737e3dbdf9c08cdf">
+  <source>Close file</source>
+  <target>Datei schließen</target>
+</trans-unit>
+<trans-unit id="s2ceb11be2290bb1b">
+  <source>Cancel</source>
+  <target>Abbrechen</target>
+</trans-unit>
+<trans-unit id="s60320a18282b2b33">
+  <source>Rename</source>
+  <target>Umbenennen</target>
+</trans-unit>
 <trans-unit id="s5e8250fb85d64c23">
   <source>Close</source>
   <target>Schließen</target>

@@ -49,7 +49,7 @@ export namespace util {
 <SCL version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
   <Substation name="A1" desc="test substation"></Substation>
 </SCL>`;
-  const testDocStrings = [
+  export const testDocStrings = [
     sclDocString,
     `<?xml version="1.0" encoding="UTF-8"?>
   <testDoc1>
@@ -187,7 +187,13 @@ export namespace util {
   }
 }
 
-describe('Editing Element', () => {
+function newTestDoc() {
+  const docString =
+    util.testDocStrings[Math.floor(Math.random() * util.testDocStrings.length)];
+  return new DOMParser().parseFromString(docString, 'application/xml');
+}
+
+describe('open-scd', () => {
   let editor: OpenSCD;
   let sclDoc: XMLDocument;
 
@@ -199,11 +205,74 @@ describe('Editing Element', () => {
     );
   });
 
-  it('loads a document on OpenDocEvent', async () => {
+  it('loads a non-SCL document on OpenDocEvent', async () => {
+    editor.dispatchEvent(newOpenEvent(sclDoc, 'test.xml'));
+    await editor.updateComplete;
+    expect(editor.docs).to.have.property('test.xml', sclDoc);
+  });
+
+  it('opens an SCL document for editing on OpenDocEvent', async () => {
     editor.dispatchEvent(newOpenEvent(sclDoc, 'test.scd'));
     await editor.updateComplete;
     expect(editor.doc).to.equal(sclDoc);
     expect(editor.docName).to.equal('test.scd');
+  });
+
+  describe('with an SCL document loaded', () => {
+    beforeEach(async () => {
+      editor.dispatchEvent(newOpenEvent(sclDoc, 'test.scd'));
+      await editor.updateComplete;
+    });
+
+    it('allows the user to change the current doc name', async () => {
+      editor.shadowRoot
+        ?.querySelector<HTMLButtonElement>('mwc-icon-button[icon=edit]')
+        ?.click();
+      const dialog = editor.editFileUI;
+      await dialog.updateComplete;
+      const textfield = dialog.querySelector('mwc-textfield')!;
+      textfield.value = 'newName';
+      const select = dialog.querySelector('mwc-select')!;
+      select.value = 'cid';
+      await textfield.updateComplete;
+      await select.updateComplete;
+      dialog
+        .querySelector<HTMLButtonElement>('mwc-button[slot="primaryAction"]')
+        ?.click();
+      await editor.updateComplete;
+      expect(editor).to.have.property('docName', 'newName.cid');
+      expect(editor).to.have.property('doc', sclDoc);
+    });
+  });
+
+  it('allows the user to close the current doc', async () => {
+    editor.shadowRoot
+      ?.querySelector<HTMLButtonElement>('mwc-icon-button[icon=edit]')
+      ?.click();
+    const dialog = editor.editFileUI;
+    await dialog.updateComplete;
+    dialog
+      .querySelector<HTMLButtonElement>('mwc-button[icon="delete"]')
+      ?.click();
+    await editor.updateComplete;
+    expect(editor).to.have.property('docName');
+    expect(editor).to.have.property('doc');
+  });
+
+  describe('with several documents loaded', () => {
+    beforeEach(async () => {
+      for (let i = 0; i < Math.floor(Math.random() * 10) + 1; i += 1)
+        editor.dispatchEvent(newOpenEvent(newTestDoc(), `test${i}.scd`));
+    });
+
+    it('allows the user to switch documents', async () => {
+      const oldDocName = editor.docName;
+      editor.fileMenuButtonUI?.click();
+      await editor.fileMenuUI.updateComplete;
+      (editor.fileMenuUI.firstElementChild as HTMLButtonElement).click();
+      await editor.updateComplete;
+      expect(editor).to.not.have.property('docName', oldDocName);
+    });
   });
 
   it('inserts an element on Insert', () => {

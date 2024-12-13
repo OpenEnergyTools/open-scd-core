@@ -75,7 +75,7 @@ allLocales.forEach(lang =>
     it(`displays a current document title`, async () => {
       await editor.updateComplete;
 
-      editor.dispatchEvent(newOpenEvent(doc, 'test.xml'));
+      editor.dispatchEvent(newOpenEvent(doc, 'test.scd'));
       await editor.updateComplete;
       await timeout(20);
       await visualDiff(editor, `document-name-${lang}`);
@@ -213,7 +213,7 @@ allLocales.forEach(lang =>
             },
             {
               name: 'Test Menu Plugin 2',
-              src: 'data:text/javascript;charset=utf-8,export%20default%20class%20TestPlugin%20extends%20HTMLElement%20%7B%0D%0A%20%20async%20run%28%29%20%7B%0D%0A%20%20%20%20this.dispatchEvent%28new%20CustomEvent%28%27oscd-open%27%2C%20%7Bdetail%3A%20%7BdocName%3A%20%27testDoc%27%2C%20doc%3A%20window.document%7D%2C%20bubbles%3A%20true%2C%20composed%3A%20true%7D%29%29%3B%0D%0A%20%20%7D%0D%0A%7D',
+              src: 'data:text/javascript;charset=utf-8,export%20default%20class%20TestPlugin%20extends%20HTMLElement%20%7B%0D%0A%20%20async%20run%28%29%20%7B%0D%0A%20%20%20%20this.dispatchEvent%28new%20CustomEvent%28%27oscd-open%27%2C%20%7Bdetail%3A%20%7BdocName%3A%20%27testDoc.scd%27%2C%20doc%3A%20window.document%7D%2C%20bubbles%3A%20true%2C%20composed%3A%20true%7D%29%29%3B%0D%0A%20%20%7D%0D%0A%7D',
               icon: 'polymer',
               active: true,
               requireDoc: false,
@@ -264,7 +264,7 @@ allLocales.forEach(lang =>
 
         await editor.updateComplete;
         await timeout(200);
-        expect(editor.docName).to.equal('testDoc');
+        expect(editor.docName).to.equal('testDoc.scd');
         await editor.updateComplete;
         await visualDiff(editor, `menu-plugins-triggered-${lang}`);
       });
@@ -316,7 +316,7 @@ allLocales.forEach(lang =>
       });
 
       it('displays more tabs with a doc loaded', async () => {
-        editor.dispatchEvent(newOpenEvent(doc, 'test.xml'));
+        editor.dispatchEvent(newOpenEvent(doc, 'test.scd'));
         await editor.updateComplete;
         await visualDiff(editor, `editor-plugins-with-doc-${lang}`);
       });
