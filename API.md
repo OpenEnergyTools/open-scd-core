@@ -37,7 +37,7 @@ export default class MyPlugin extends HTMLElement {
   ];
   history: LogEntry[];
   editCount: number = 0;
-  plugins: { menu: Plugin[], editor: Plugin[] };
+  plugins: { menu: Record<string, Plugin>; editor: Record<string, Plugin>; };
   locale: string = 'en';
 }
 
@@ -50,7 +50,6 @@ type LogEntry = {
 }
 
 type Plugin = {
-  name: string;
   translations?: Record<string, string>;
   src: string;
   icon: string; // Material icon name or image URL
