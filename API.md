@@ -37,7 +37,7 @@ export default class MyPlugin extends HTMLElement {
   ];
   history: LogEntry[];
   editCount: number = 0;
-  plugins: { menu: Plugin[], editor: Plugin[] }[];
+  plugins: { menu: Plugin[], editor: Plugin[] };
   locale: string = 'en';
 }
 
