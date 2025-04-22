@@ -36,7 +36,7 @@ export default class MyPlugin extends HTMLElement {
     'ssd',
   ];
   history: LogEntry[];
-  editCount: number = 0;
+  docVersion: unknown;
   plugins: { menu: Plugin[], editor: Plugin[] }[];
   locale: string = 'en';
 }
